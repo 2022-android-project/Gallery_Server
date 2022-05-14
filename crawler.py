@@ -5,6 +5,15 @@ app = Flask(__name__)
 from selenium import webdriver
 from bs4 import BeautifulSoup
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+import pymysql
+conn = pymysql.connect(host=os.environ.get('IP_ADDRESS'), user=os.environ.get('USER'), password=os.environ.get('PASSWORD'), db=os.environ.get('DB_NAME'), charset='utf8')
+cur = conn.cursor()
+
 driver = webdriver.Chrome('chromedriver')
 
 # 인터파크
@@ -28,12 +37,14 @@ for i, tr in enumerate(trs):
     title = tr.select_one('td.RKtxt > span > a').text                                     # 전시제목
     location = tr.select_one('td:nth-child(3) > a').text                                  # 장소
     date = tr.select_one('td:nth-child(4)').text.replace('\n', '').replace('\t', '')      # 날짜
+    StartPeriod, EndPeriod = str(date).split('~')
 
     # 세부 페이지
     page = page_list[i]
     driver.get(page)
     page_requests = driver.page_source
     page_soup = BeautifulSoup(page_requests, 'html.parser')
+
     price = page_soup.select_one("#container > div.contents > div.productWrapper > div.productMain > div.productMainTop > div > div.summaryBody > ul > li.infoItem.infoPrice > div > ul > li:nth-child(2) > span.price")   # 가격
     if price != None:
         price = price.getText()
@@ -42,4 +53,13 @@ for i, tr in enumerate(trs):
     if additionInfo != None:
         additionInfo = additionInfo.getText()
 
-    print(image, title, location, date, price, additionInfo)
+    sql = "INSERT INTO art_table(artname, StartPeriod, EndPeriod,Price,Explanation, url, location) VALUES(%s, %s, %s, %s, %s, %s, %s)"
+    val = (title, StartPeriod, EndPeriod, price, additionInfo, image, location)
+    cur.execute(sql, val)
+
+    print(i)
+
+    # print(title, StartPeriod, EndPeriod, price, additionInfo, image, location)
+
+conn.commit()
+conn.close()
