@@ -1,12 +1,10 @@
 # <랭킹>
-from flask import Flask
-app = Flask(__name__)
-
 from selenium import webdriver
 from bs4 import BeautifulSoup
 
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 
@@ -53,11 +51,11 @@ for i, tr in enumerate(trs):
     if additionInfo != None:
         additionInfo = additionInfo.getText()
 
-    sql = "INSERT INTO art_table(artname, StartPeriod, EndPeriod,Price,Explanation, url, location) VALUES(%s, %s, %s, %s, %s, %s, %s)"
+    sql = "INSERT INTO art(artname, StartPeriod, EndPeriod,Price,Explanation, url, location) VALUES(%s, %s, %s, %s, %s, %s, %s)"
     val = (title, StartPeriod, EndPeriod, price, additionInfo, image, location)
     cur.execute(sql, val)
 
-    print(i)
+    time.sleep(2)
 
     # print(title, StartPeriod, EndPeriod, price, additionInfo, image, location)
 
